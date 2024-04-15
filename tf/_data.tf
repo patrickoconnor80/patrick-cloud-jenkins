@@ -1,18 +1,18 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-data "aws_vpc" "golden_vpc" {
-  filter {
-    name   = "tag:Name"
-    values = ["golden-vpc"]
-  }
+data "aws_vpc" "this" {
+    filter {
+        name = "tag:Name"
+        values = ["${local.prefix}-vpc"]
+    }
 }
 
 data "aws_subnets" "public" {
-  filter {
-    name   = "tag:Name"
-    values = ["golden-vpc-public-us-east-1*"]
-  }
+    filter {
+        name = "tag:Name"
+        values = ["${local.prefix}-public-us-east-1*"]
+    }
 }
 
 data "aws_subnet" "public" {
@@ -21,10 +21,10 @@ data "aws_subnet" "public" {
 }
 
 data "aws_subnets" "private" {
-  filter {
-    name   = "tag:Name"
-    values = ["golden-vpc-private-us-east-1*"]
-  }
+    filter {
+        name = "tag:Name"
+        values = ["${local.prefix}-private-us-east-1*"]
+    }
 }
 
 data "aws_subnet" "private" {
@@ -42,4 +42,12 @@ data "aws_security_group" "jenkins_sg" {
 
 data "aws_security_group" "alb_sg" {
   name = "${local.prefix}-alb-sg"
+}
+
+data "aws_sns_topic" "email" {
+  name = "${local.prefix}-email-sns"
+}
+
+data "aws_alb_target_group" "jenkins" {
+  name = "${local.prefix}-jenkins-tg"
 }

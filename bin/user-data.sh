@@ -24,7 +24,7 @@ sudo wget -O /usr/share/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debi
 echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
 /etc/apt/sources.list.d/jenkins.list > /dev/null
 sudo apt-get update -y
-sudo apt-get install jenkins=2.401.1 -y
+sudo apt-get install jenkins=2.440.2 -y
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
 echo "Jenkins version: $(jenkins --version)"
@@ -40,21 +40,29 @@ echo "Give Jenkins User access to Docker, then restart"
 sudo usermod -a -G docker jenkins
 sudo systemctl restart jenkins
 
-# echo "Run SonarQube"
-# docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
+echo "Run SonarQube"
+docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
 
-# echo "Install Trivy"
-# sudo apt-get install wget apt-transport-https gnupg lsb-release
-# wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-# echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-# sudo apt-get update -y
-# sudo apt-get install trivy -y
+echo "Install Trivy"
+sudo apt-get install wget apt-transport-https gnupg lsb-release
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt-get update -y
+sudo apt-get install trivy -y
 
-# Install Nginx
+echo "Install AWSCLI"
+sudo apt-get install zip unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+echo "AWSCLI version: $(aws --version)"
+
+echo "Install Nginx"
 sudo apt update
 sudo apt install nginx -y
 
-mkdir -p /var/log/nginx/
+mkdir -p /var/log/nginx/jenkins_http
+mkdir -p /var/log/nginx/jenkins_https
 mkdir -p /usr/share/nginx/html
 
 # Create jenkins_nginx_index.html file from local directory
@@ -89,3 +97,6 @@ sudo systemctl status nginx
 ## JENKINS_ARGS="--webroot=/var/cache/$NAME/war --httpPort=$HTTP_PORT --httpListenAddress=127.0.0.1"
 ##"""
 ## sudo systemctl restart jenkins
+
+echo "Install yq for kubernetes manifest editing"
+snap install yq

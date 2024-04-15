@@ -45,9 +45,29 @@ resource "aws_iam_policy" "this" {
         "s3:ListBucket"
       ],
       "Resource": [
-        "arn:aws:s3:::jenkins-s3-bucket-week20terraform",
-        "arn:aws:s3:::jenkins-s3-bucket-week20terraform/*"
+        "${aws_s3_bucket.this.arn}",
+        "${aws_s3_bucket.this.arn}/*"
       ]
+    },
+    {
+      "Sid": "ECRToken",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken"
+      ],
+      "Resource": ["*"]
+    },
+    {
+      "Sid": "ECRUploadImage",
+      "Effect": "Allow",
+      "Action": [
+          "ecr:CompleteLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:InitiateLayerUpload",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage"
+      ],
+      "Resource": "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${local.prefix}-dbt-docs"
     }
   ]
 }
@@ -57,6 +77,13 @@ EOF
 resource "aws_iam_role_policy_attachment" "this" {
   role       = aws_iam_role.this.name
   policy_arn = aws_iam_policy.this.arn
+}
+
+
+# Enable SSM connection so it easy to connect to ec2 in private subnet for deubugging
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = aws_iam_role.this.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_instance_profile" "this" {

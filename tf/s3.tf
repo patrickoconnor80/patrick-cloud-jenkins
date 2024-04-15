@@ -16,3 +16,4 @@ resource "aws_s3_bucket_ownership_controls" "this" {
     object_ownership = "ObjectWriter"
   }
 }
+
