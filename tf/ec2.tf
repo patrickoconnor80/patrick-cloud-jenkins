@@ -1,11 +1,13 @@
 resource "aws_instance" "jenkins" {
   ami = "ami-0e21465cede02fd1e"
-  instance_type          = "t2.large"
+  instance_type          = "t3.large"
   subnet_id              = local.private_subnet_ids[0]
   vpc_security_group_ids = [data.aws_security_group.jenkins_sg.id]
   iam_instance_profile = aws_iam_instance_profile.this.id
   user_data              = local.user_data
   key_name               = "patrick-cloud-jenkins"
+  monitoring = true
+  ebs_optimized = true
   root_block_device {
     volume_size = 30
     delete_on_termination = false

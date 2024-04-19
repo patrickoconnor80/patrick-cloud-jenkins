@@ -1,3 +1,8 @@
+resource "aws_iam_instance_profile" "this" {
+  name = "${local.prefix}-jenkins-profile"
+  role = aws_iam_role.this.name
+}
+
 resource "aws_iam_role" "this" {
   name        = "${local.prefix}-jenkins-ec2-role"
   description = "Allows the Jenkins service to"
@@ -37,19 +42,6 @@ resource "aws_iam_policy" "this" {
       ]
     },
     {
-      "Sid": "S3ReadWriteAccess",
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:ListBucket"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.this.arn}",
-        "${aws_s3_bucket.this.arn}/*"
-      ]
-    },
-    {
       "Sid": "ECRToken",
       "Effect": "Allow",
       "Action": [
@@ -80,13 +72,16 @@ resource "aws_iam_role_policy_attachment" "this" {
 }
 
 
+## IAM POLCIY ATTACHMENTS ##
+
+# Policy found at patrick-cloud-jenkins/tf/iam.tf:aws_iam_policy.kms_decrypt_cloudwatch
+resource "aws_iam_role_policy_attachment" "kms_decrypt_cloudwatch" {
+  role       = aws_iam_role.this.name
+  policy_arn = aws_iam_policy.kms_decrypt_cloudwatch.arn
+}
+
 # Enable SSM connection so it easy to connect to ec2 in private subnet for deubugging
 resource "aws_iam_role_policy_attachment" "ssm" {
   role       = aws_iam_role.this.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-resource "aws_iam_instance_profile" "this" {
-  name = "${local.prefix}-jenkins-profile"
-  role = aws_iam_role.this.name
 }
